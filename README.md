@@ -18,7 +18,7 @@ TaskPal je aplikacija za upravljanje zadacima koja koristi C#, JavaScript i Vue 
 
 ## Instalacija
 
-1. Klonirajte repozitorij: `[git clone https://github.com/miljakz/taskpal2.git]`
+1. Klonirajte repozitorij: `[git clone https://github.com/miljakz/taskpalapp_dwa.git]`
 2. Instalirajte ovisnosti: `npm install`
 3. Pokrenite aplikaciju: `npm start`
 
