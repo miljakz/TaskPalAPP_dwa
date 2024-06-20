@@ -3,76 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskPal</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <title>TaskPal Login</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="app">
+    <div class="container">
         <header>
-            <div class="center">
-                <h1>TaskPal</h1>
-                <img class="logo" src="logo.png" alt="TaskPal Logo">
-            </div>
+            <h1>TaskPal</h1>
+            <img class="logo" src="logo.png" alt="TaskPal Logo">
         </header>
         <main>
-            <div v-if="user">
-                <!-- Category Management -->
-                <section>
-                    <h2>Manage Categories</h2>
-                    <form @submit.prevent="addCategory">
-                        <input type="text" v-model="newCategory" placeholder="New Category" required>
-                        <button type="submit" class="button">Add Category</button>
-                    </form>
-                    <ul>
-                        <li v-for="category in categories" :key="category">
-                            {{ category }} <button @click="removeCategory(category)">Remove</button>
-                        </li>
-                    </ul>
-                </section>
-
-                <!-- Task Management -->
-                <section>
-                    <h2>Tasks</h2>
-                    <form @submit.prevent="addTask">
-                        <input type="text" v-model="newTask.title" placeholder="Task Title" required>
-                        <select v-model="newTask.category" required>
-                            <option v-for="category in categories" :key="category">{{ category }}</option>
-                        </select>
-                        <button type="submit" class="button">Add Task</button>
-                    </form>
-                    <h3>Filter Tasks</h3>
-                    <select v-model="filterCategory">
-                        <option value="">All</option>
-                        <option v-for="category in categories" :key="category">{{ category }}</option>
-                    </select>
-                    <ul>
-                        <li v-for="task in filteredTasks" :key="task.id">
-                            {{ task.title }} - {{ task.category }} <button @click="removeTask(task.id)">Remove</button>
-                        </li>
-                    </ul>
-                </section>
-
-                <button class="button" @click="logout">Logout</button>
-            </div>
-            <div v-else>
-                <!-- Login form -->
-                <form @submit.prevent="login">
+            <section class="form-container">
+                <h2>Login</h2>
+                <form id="login-form" action="index.html">
                     <label for="email">Email:</label>
-                    <input type="email" id="email" v-model="email" required>
+                    <input type="email" id="email" name="email" required>
                     <label for="password">Password:</label>
-                    <input type="password" id="password" v-model="password" required>
+                    <input type="password" id="password" name="password" required>
                     <button type="submit" class="button">Login</button>
                 </form>
-                <p v-if="error" class="error">{{ error }}</p>
-            </div>
+                <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+            </section>
         </main>
-        <footer class="center">
+        <footer>
             <p>© 2023 TaskPal. All rights reserved.</p>
         </footer>
     </div>
-    <script src="../src/app.js"></script>
 </body>
 </html>
