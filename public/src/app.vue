@@ -1,163 +1,219 @@
 <template>
   <div id="app">
-    <div v-if="user">
-      <h2>Welcome, {{ user.email }}</h2>
-      <button @click="logout">Logout</button>
-      
-      <div>
-        <h3>Add Category</h3>
-        <input v-model="newCategory" placeholder="New Category" />
-        <button @click="addCategory">Add Category</button>
-        <ul>
-          <li v-for="category in categories" :key="category">
-            {{ category }} <button @click="removeCategory(category)">Remove</button>
-          </li>
-        </ul>
-      </div>
+    <header class="center">
+      <h1>TaskPal</h1>
+      <img class="logo" src="logo.png" alt="TaskPal Logo">
+    </header>
+    <main>
+      <div v-if="user">
+        <!-- Category Management -->
+        <section>
+          <h2>Manage Categories</h2>
+          <form @submit.prevent="addCategory">
+            <input type="text" v-model="newCategory" placeholder="New Category" required>
+            <button type="submit" class="button">Add Category</button>
+          </form>
+          <ul>
+            <li v-for="category in categories" :key="category">
+              {{ category }} <button @click="removeCategory(category)">Remove</button>
+            </li>
+          </ul>
+        </section>
 
-      <div>
-        <h3>Add Task</h3>
-        <input v-model="newTask.title" placeholder="Task Title" />
-        <input v-model="newTask.category" placeholder="Task Category" />
-        <button @click="addTask">Add Task</button>
-        <ul>
-          <li v-for="task in filteredTasks" :key="task.id">
-            {{ task.title }} ({{ task.category }}) <button @click="removeTask(task.id)">Remove</button>
-          </li>
-        </ul>
-      </div>
+        <!-- Task Management -->
+        <section>
+          <h2>Tasks</h2>
+          <form @submit.prevent="addTask">
+            <input type="text" v-model="newTask.title" placeholder="Task Title" required>
+            <select v-model="newTask.category" required>
+              <option v-for="category in categories" :key="category">{{ category }}</option>
+            </select>
+            <button type="submit" class="button">Add Task</button>
+          </form>
+          <h3>Filter Tasks</h3>
+          <select v-model="filterCategory">
+            <option value="">All</option>
+            <option v-for="category in categories" :key="category">{{ category }}</option>
+          </select>
+          <ul>
+            <li v-for="task in filteredTasks" :key="task.id">
+              {{ task.title }} - {{ task.category }} <button @click="removeTask(task.id)">Remove</button>
+            </li>
+          </ul>
+        </section>
 
-      <div>
-        <h3>Filter Tasks</h3>
-        <input v-model="filterCategory" placeholder="Filter by Category" />
+        <button class="button" @click="logout">Logout</button>
       </div>
-    </div>
-
-    <div v-else>
-      <h2>Login</h2>
-      <input v-model="email" placeholder="Email" />
-      <input v-model="password" type="password" placeholder="Password" />
-      <button @click="login">Login</button>
-      <p v-if="error">{{ error }}</p>
-    </div>
+      <div v-else>
+        <!-- Login form -->
+        <form @submit.prevent="login" class="form-container">
+          <label for="email">Email:</label>
+          <input type="email" id="email" v-model="email" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" v-model="password" required>
+          <button type="submit" class="button">Login</button>
+        </form>
+        <p v-if="error" class="error">{{ error }}</p>
+      </div>
+    </main>
+    <footer class="center footer">
+      <p>© 2023 TaskPal. All rights reserved.</p>
+    </footer>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { auth } from './firebaseConfig';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+// Import Firebase SDK components as needed
+import { ref, computed } from 'vue';
 
 export default {
   name: 'App',
-  setup() {
-    const email = ref('');
-    const password = ref('');
-    const user = ref(null);
-    const error = ref('');
-    const newCategory = ref('');
-    const categories = ref([]);
-    const newTask = ref({
-      title: '',
-      category: ''
-    });
-    const tasks = ref([]);
-    const filterCategory = ref('');
-
-    const login = async () => {
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-        user.value = userCredential.user;
-      } catch (err) {
-        error.value = err.message;
-      }
-    };
-
-    const logout = async () => {
-      await signOut(auth);
-      user.value = null;
-    };
-
-    const addCategory = () => {
-      if (newCategory.value.trim()) {
-        categories.value.push(newCategory.value);
-        newCategory.value = '';
-      }
-    };
-
-    const removeCategory = (category) => {
-      categories.value = categories.value.filter(cat => cat !== category);
-    };
-
-    const addTask = () => {
-      if (newTask.value.title.trim() && newTask.value.category.trim()) {
-        const task = { ...newTask.value, id: Date.now() };
-        tasks.value.push(task);
-        newTask.value.title = '';
-        newTask.value.category = '';
-      }
-    };
-
-    const removeTask = (taskId) => {
-      tasks.value = tasks.value.filter(task => task.id !== taskId);
-    };
-
-    const fetchCategories = () => {
-      // Fetch categories from Firebase or local storage
-    };
-
-    const fetchTasks = () => {
-      // Fetch tasks from Firebase or local storage
-    };
-
-    const filteredTasks = computed(() => {
-      if (filterCategory.value) {
-        return tasks.value.filter(task => task.category === filterCategory.value);
-      }
-      return tasks.value;
-    });
-
-    onMounted(() => {
-      onAuthStateChanged(auth, (currentUser) => {
-        if (currentUser) {
-          user.value = currentUser;
-          fetchCategories();
-          fetchTasks();
-        } else {
-          user.value = null;
-        }
-      });
-    });
-
+  data() {
     return {
-      email,
-      password,
-      user,
-      error,
-      newCategory,
-      categories,
-      newTask,
-      tasks,
-      filterCategory,
-      login,
-      logout,
-      addCategory,
-      removeCategory,
-      addTask,
-      removeTask,
-      filteredTasks
+      email: '',
+      password: '',
+      user: null,
+      error: '',
+      newCategory: '',
+      categories: [],
+      newTask: {
+        title: '',
+        category: ''
+      },
+      tasks: [],
+      filterCategory: ''
     };
+  },
+  created() {
+    // Initialize Firebase and handle authentication
+    // Example:
+    // firebase.initializeApp(firebaseConfig);
+    // firebase.auth().onAuthStateChanged(...)
+  },
+  methods: {
+    login() {
+      // Handle login with Firebase
+      // Example:
+      // firebase.auth().signInWithEmailAndPassword(...)
+    },
+    logout() {
+      // Handle logout with Firebase
+      // Example:
+      // firebase.auth().signOut()
+    },
+    addCategory() {
+      // Add category logic (update Firebase or local storage)
+    },
+    removeCategory(category) {
+      // Remove category logic (update Firebase or local storage)
+    },
+    addTask() {
+      // Add task logic (update Firebase or local storage)
+    },
+    removeTask(taskId) {
+      // Remove task logic (update Firebase or local storage)
+    },
+    fetchCategories() {
+      // Fetch categories from Firebase or local storage
+    },
+    fetchTasks() {
+      // Fetch tasks from Firebase or local storage
+    }
+  },
+  computed: {
+    filteredTasks() {
+      if (this.filterCategory) {
+        return this.tasks.filter(task => task.category === this.filterCategory);
+      }
+      return this.tasks;
+    }
   }
 };
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+<style scoped>
+/* Scoped CSS for App.vue component */
+/* Adjust styles as needed */
+.center {
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
+}
+
+main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-container {
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+input[type=email],
+input[type=password],
+input[type=text],
+select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #45a049;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #666;
 }
 </style>
