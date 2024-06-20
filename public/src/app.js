@@ -1,3 +1,7 @@
+import { createApp, ref, computed, onMounted } from 'vue';
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+
 const firebaseConfig = {
     apiKey: "AIzaSyAP-8IoWSYxNhvNAHq18yOe5S1B6nZKJQ4",
     authDomain: "task-e1b5f.firebaseapp.com",
@@ -8,83 +12,106 @@ const firebaseConfig = {
     measurementId: "G-PZGJGBVYD5"
 };
 
-firebase.initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
+const auth = getAuth();
 
-new Vue({
-    el: '#app',
-    data: {
-        email: '',
-        password: '',
-        user: null,
-        error: '',
-        newCategory: '',
-        categories: [],
-        newTask: {
+createApp({
+    setup() {
+        const email = ref('');
+        const password = ref('');
+        const user = ref(null);
+        const error = ref('');
+        const newCategory = ref('');
+        const categories = ref([]);
+        const newTask = ref({
             title: '',
             category: ''
-        },
-        tasks: [],
-        filterCategory: ''
-    },
-    created() {
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                this.user = user;
-                this.fetchCategories();
-                this.fetchTasks();
-            } else {
-                this.user = null;
-            }
         });
-    },
-    methods: {
-        login() {
-            firebase.auth().signInWithEmailAndPassword(this.email, this.password)
-                .then(userCredential => {
-                    this.user = userCredential.user;
-                })
-                .catch(error => {
-                    this.error = error.message;
-                });
-        },
-        logout() {
-            firebase.auth().signOut().then(() => {
-                this.user = null;
-            });
-        },
-        addCategory() {
-            if (this.newCategory.trim()) {
-                this.categories.push(this.newCategory);
-                this.newCategory = '';
+        const tasks = ref([]);
+        const filterCategory = ref('');
+
+        const login = async () => {
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+                user.value = userCredential.user;
+            } catch (err) {
+                error.value = err.message;
             }
-        },
-        removeCategory(category) {
-            this.categories = this.categories.filter(cat => cat !== category);
-        },
-        addTask() {
-            if (this.newTask.title.trim() && this.newTask.category.trim()) {
-                const task = { ...this.newTask, id: Date.now() };
-                this.tasks.push(task);
-                this.newTask.title = '';
-                this.newTask.category = '';
+        };
+
+        const logout = async () => {
+            await signOut(auth);
+            user.value = null;
+        };
+
+        const addCategory = () => {
+            if (newCategory.value.trim()) {
+                categories.value.push(newCategory.value);
+                newCategory.value = '';
             }
-        },
-        removeTask(taskId) {
-            this.tasks = this.tasks.filter(task => task.id !== taskId);
-        },
-        fetchCategories() {
+        };
+
+        const removeCategory = (category) => {
+            categories.value = categories.value.filter(cat => cat !== category);
+        };
+
+        const addTask = () => {
+            if (newTask.value.title.trim() && newTask.value.category.trim()) {
+                const task = { ...newTask.value, id: Date.now() };
+                tasks.value.push(task);
+                newTask.value.title = '';
+                newTask.value.category = '';
+            }
+        };
+
+        const removeTask = (taskId) => {
+            tasks.value = tasks.value.filter(task => task.id !== taskId);
+        };
+
+        const fetchCategories = () => {
             // Fetch categories from Firebase or local storage
-        },
-        fetchTasks() {
+        };
+
+        const fetchTasks = () => {
             // Fetch tasks from Firebase or local storage
-        }
-    },
-    computed: {
-        filteredTasks() {
-            if (this.filterCategory) {
-                return this.tasks.filter(task => task.category === this.filterCategory);
+        };
+
+        const filteredTasks = computed(() => {
+            if (filterCategory.value) {
+                return tasks.value.filter(task => task.category === filterCategory.value);
             }
-            return this.tasks;
-        }
+            return tasks.value;
+        });
+
+        onMounted(() => {
+            onAuthStateChanged(auth, (currentUser) => {
+                if (currentUser) {
+                    user.value = currentUser;
+                    fetchCategories();
+                    fetchTasks();
+                } else {
+                    user.value = null;
+                }
+            });
+        });
+
+        return {
+            email,
+            password,
+            user,
+            error,
+            newCategory,
+            categories,
+            newTask,
+            tasks,
+            filterCategory,
+            login,
+            logout,
+            addCategory,
+            removeCategory,
+            addTask,
+            removeTask,
+            filteredTasks
+        };
     }
-});
+}).mount('#app');
